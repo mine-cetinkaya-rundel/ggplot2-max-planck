@@ -1,4 +1,4 @@
-# Data visualization with R at the Second Cognition Academy Preliminary Schedule
+# Data visualization with R at the Cognition Academy
 
 at the Max Planck School of Cognition, 6 Jan 2020.
 
