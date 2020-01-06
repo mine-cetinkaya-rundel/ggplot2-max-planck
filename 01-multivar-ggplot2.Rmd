@@ -2,7 +2,7 @@
 title: "Building multivariate visualizations <br> with ggplot2"
 subtitle: "Max Planck School of Cognition"
 author: "Dr. Mine Çetinkaya-Rundel"
-date: "6 Jan 2020 <br><br> INSERT LINK"
+date: "6 Jan 2020 <br><br> [http://bit.ly/ggplot2-mpc](bit.ly/ggplot2-mpc)"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -72,25 +72,21 @@ knitr::include_graphics("img/grammar-of-graphics.png")
 .pull-left[
 ### Option 1: RStudio local
 
-- Download the materials at https://rstd.io/uoc-ggplot2-repo and launch `uoc-ggplot2.Rproj`
-- Install `tidyverse` if you haven't done so before, or if you haven't updated it recently
+- Download the materials at [http://bit.ly/ggplot2-mpc](bit.ly/ggplot2-mpc)" and launch `ggplot2-max-planck.Rproj`
+- Install and load `tidyverse` and `ggrepel`
 ```{r, message=FALSE, eval=FALSE}
 install.packages("tidyverse")
 install.packages("ggrepel")
-```
-- Load the tidyverse
-```{r, message=FALSE}
 library(tidyverse)
 library(ggrepel)
 ```
-- Open `ggplot2.Rmd`
+- Open `exercises.Rmd`
 ]
 .pull-right[
 ### Option 2: RStudio Cloud
 
-- Go to RStudio Cloud at https://rstd.io/uoc-ggplot2-cloud
-- Start the assignment called ggplot2 Workshop
-- Open the R Markdown file in the project called ggplot
+- Open the RStudio Cloud project at http://bit.ly/2umsmNT
+- Open the R Markdown file in the project called `exercises.Rmd`
 ]
 
 ---
@@ -131,7 +127,7 @@ ggplot(data = daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
 
 ---
 
-**Exercise:** Which of the two datasets does this visualization use? Determine 
+**Warm up:** Which of the two datasets does this visualization use? Determine 
 which variable is mapped to which aesthetic (x-axis, y-axis, etc.) element 
 of the dataset.
 
@@ -292,7 +288,7 @@ ggplot(data = daily, aes(x = ride_date, y = n_rides, size = n_riders)) +
 
 ---
 
-**Exercise:** Using information from https://ggplot2.tidyverse.org/articles/ggplot2-specs.html add `color`, `size`, `alpha`, and `shape` aesthetics to your graph. Experiment. Do different things 
+**Exercise 1:** Using information from https://ggplot2.tidyverse.org/articles/ggplot2-specs.html add `color`, `size`, `alpha`, and `shape` aesthetics to your graph. Experiment. Do different things 
 happen when you map aesthetics to  discrete and continuous variables?
 What happens when you use more than one aesthetic?
 
@@ -447,7 +443,7 @@ ggplot(data = daily) +
 
 ## + and %>%
 
-**Exercise:** What is wrong with the following?
+**Exercise 2:** What is wrong with the following?
 
 ```{r eval = FALSE}
 daily %>%
@@ -541,7 +537,7 @@ ggplot(data = daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
 
 ---
 
-**Exercise:** Work with your neighbor to sketch what the following plot will 
+**Exercise 3:** Work with your neighbor to sketch what the following plot will 
 look like. No cheating! Do not run the code, just think through the code for 
 the time being.
 
@@ -636,13 +632,12 @@ ggplot(daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
 
 ---
 
-**Exercise:** How would you fix the following plot to color by day of week?
+**Exercise 4:** How would you fix the following plot to color by day of week?
 
 ```{r fig.height=2}
 ggplot(daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
   geom_smooth(color = "blue")
 ```
-
 
 ---
 
@@ -762,29 +757,74 @@ ggplot(durham_voters_summary, aes(x = age, y = n_all_voters)) +
 
 ---
 
-## Facets + layers
+**Exercise 5:** In what ways is the following plot different than the previous?
 
 ```{r facet-layer, echo = FALSE, fig.height = 3, fig.width=7}
+durham_voters_summary %>% 
+  pivot_longer(cols = starts_with("n_"), 
+               names_to = "voter_type", values_to = "n", 
+               names_prefix = "n_") %>%
+  mutate(age_cat = as.numeric(as.factor(age))) %>%
+  ggplot(aes(x = age, y = n, color = voter_type)) + 
+  geom_point() + 
+  geom_line(aes(x = age_cat)) +
+  facet_grid(race_code ~ gender_code, scales = "free_y") +
+  expand_limits(y = 0) +
+  theme(legend.position = "bottom")
+```
+
+---
+
+```{r}
+durham_voters_summary
+```
+
+---
+
+class: center, middle
+
+```{r echo=FALSE,out.width="80%",fig.align="center"}
+knitr::include_graphics("img/pivot.gif")
+```
+
+---
+
+## `pivot_*()` functions
+
+
+```{r echo=FALSE}
+knitr::include_graphics("img/tidyr-longer-wider.gif")
+```
+
+---
+
+## `pivot_longer()`
+
+```{r eval=FALSE}
+pivot_longer(data, cols, names_to = "name", values_to = "value")
+```
+
+- The first argument is `data` as usual.
+- The second argument, `cols`, is where you specify which columns to pivot 
+into longer format -- in this case any column starting with `n`: `starts_with("n_")`
+- The third argument, `names_to`, is a string specifying the name of the column to create from the data stored in the column names of data -- in this case `voter_type`
+- The fourth argument, `values_to`, is a string specifying the name of the column to create from the data stored in cell values, in this case `n`
+- We'll also prefix these names with `n`
+
+---
+
+```{r}
+durham_voters_summary %>% 
+  tidyr::pivot_longer(cols = starts_with("n_"), 
+                      names_to = "voter_type", values_to = "n", 
+                      names_prefix = "n_")
 ```
 
 ---
 
 ## Facets + layers
 
-Using new tidyr function: `pivot_longer()`
-
 ```{r ref.label="facet-layer", eval = FALSE}
-durham_voters_summary %>% 
-  tidyr::pivot_longer(cols = starts_with("n_"), 
-                      names_to = "voter_type", values_to = "n", 
-                      names_prefix = "n_") %>%
-  mutate(age_cat = as.numeric(as.factor(age))) %>%
-  ggplot(aes(x = age, y = n, color = voter_type)) + 
-    geom_point() + 
-    geom_line(aes(x = age_cat)) +
-    facet_grid(race_code ~ gender_code, scales = "free_y") +
-    expand_limits(y = 0) +
-    theme(legend.position = "bottom")
 ```
 
 ---
@@ -861,7 +901,7 @@ ggplot(data = daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
 
 ---
 
-**Exercise:** Fix the axis labels in the following plot so they don't overlap by playing around with their orientation.
+**Exercise 6:** Fix the axis labels in the following plot so they don't overlap by playing around with their orientation.
 
 ```{r fig.height = 2}
 ggplot(durham_voters_summary, aes(x = age, y = n_all_voters)) +

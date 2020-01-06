@@ -1,0 +1,98 @@
+---
+title: "Building multivariate visualizations with ggplot2"
+output: 
+  html_document: 
+    fig_height: 3.5
+---
+
+```{r message=FALSE}
+library(tidyverse)
+library(scales)
+```
+
+### Warm up: Which of the two datasets does this visualization use? Determine which variable is mapped to which aesthetic (x-axis, y-axis, etc.) element of the dataset.
+
+```{r echo=FALSE, fig.height=2}
+daily <- read_csv("data/daily.csv")
+
+ggplot(data = daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
+  geom_smooth(se = FALSE, method = "loess") +
+  theme_minimal() +
+  labs(x = "Ride date", y = "Number of rides", color = "Day of week",
+       title = "Daily rides", subtitle = "Durham, NC") +
+  scale_color_viridis_d()
+```
+
+### Exercise 1: Using information from https://ggplot2.tidyverse.org/articles/ggplot2-specs.html add `color`, `size`, `alpha`, and `shape` aesthetics to your graph. Experiment. Do different things happen when you map aesthetics to  discrete and continuous variables? What happens when you use more than one aesthetic?
+
+```{r}
+ggplot(data = daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
+  geom_smooth(method = "loess", se = FALSE) +
+  scale_color_viridis_d() +
+  theme_minimal() +
+  labs(x = "Ride date", y = "Number of rides", color = "Day of week",
+       title = "Daily rides", subtitle = "Durham, NC")
+```
+
+### Exercise 2: What is wrong with the following?
+
+```{r eval=FALSE}
+daily %>%
+  mutate(day_type = if_else(day_of_week %in% c("Sat", "Sun"), "Weekend", "Weekday")) %>%
+  ggplot(aes(x = ride_date, y = n_rides, color = day_type)) %>%
+    geom_point()
+```
+
+### Exercise 3: Work with your neighbor to sketch what the following plot will look like. No cheating! Do not run the code, just think through the code for the time being.
+
+```{r eval=FALSE}
+low_weekdays <- daily %>%
+  filter(!(day_of_week %in% c("Sat", "Sun")) & n_rides < 100)
+
+ggplot(daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
+  geom_point(data = low_weekdays, size = 5, color = "gray") +
+  geom_point() +
+  geom_text(data = low_weekdays, aes(y = n_rides + 15, label = ride_date), 
+            size = 2, color = "black")
+```
+
+### Exercise 4: How would you fix the following plot to color by day of week?
+
+```{r}
+ggplot(daily, aes(x = ride_date, y = n_rides, color = day_of_week)) +
+  geom_smooth(color = "blue")
+```
+
+### Exercise 5: In what ways is the following plot different than the previous?
+
+```{r}
+durham_voters <- read_csv("data/durham_voters.csv")
+
+durham_voters_summary <- durham_voters %>%
+  group_by(race_code, gender_code, age) %>%
+  summarize(n_all_voters = n(), 
+            n_rep_voters = sum(party == "REP")) %>%
+  filter(gender_code %in% c("F", "M") & 
+         race_code %in% c("W", "B", "A") &
+         age != "Age < 18 Or Invalid Birth Date")
+
+durham_voters_summary %>% 
+  pivot_longer(cols = starts_with("n_"), 
+               names_to = "voter_type", values_to = "n", 
+               names_prefix = "n_") %>%
+  mutate(age_cat = as.numeric(as.factor(age))) %>%
+  ggplot(aes(x = age, y = n, color = voter_type)) + 
+  geom_point() + 
+  geom_line(aes(x = age_cat)) +
+  facet_grid(race_code ~ gender_code, scales = "free_y") +
+  expand_limits(y = 0) +
+  theme(legend.position = "bottom")
+```
+
+### Exercise 6: Fix the axis labels in the following plot so they don't overlap by playing around with their orientation.
+
+```{r fig.width=4}
+ggplot(durham_voters_summary, aes(x = age, y = n_all_voters)) +
+  geom_bar(stat = "identity") +
+  facet_grid(race_code ~ gender_code, scales = "free_y")
+```
